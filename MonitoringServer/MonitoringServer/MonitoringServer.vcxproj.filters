@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Dump">
+      <UniqueIdentifier>{e5093d78-c8a0-4d78-bf54-a6c6d6d55ef5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log">
+      <UniqueIdentifier>{1b105023-3669-4896-ae20-3ab4fb7db4e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MemoryPool">
+      <UniqueIdentifier>{d58c2591-22c7-4c66-aa45-723a6375c1c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{65a9e2f1-5b51-4646-913c-bdedfcbf4ebc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\NetServer">
+      <UniqueIdentifier>{93855315-6965-4ab6-a820-c6bb96da90c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\LanServer">
+      <UniqueIdentifier>{4b1310dc-8241-474a-8be4-b5bbd927a5e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Parse">
+      <UniqueIdentifier>{d6a55b1c-4e80-4664-8547-17457088580f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{0cacf452-ae2f-4bf0-ae53-ddcab24366e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataBase">
+      <UniqueIdentifier>{55e7f3b4-ceae-4a44-8a79-4379afe9cb29}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DB_Connector.h">
+      <Filter>DataBase</Filter>
+    </ClInclude>
+    <ClInclude Include="APIHook.h">
+      <Filter>Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="Dump.h">
+      <Filter>Dump</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h">
+      <Filter>Log</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryPool.h">
+      <Filter>MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="LockFreeQueue.h">
+      <Filter>MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="LockFreeStack.h">
+      <Filter>MemoryPool</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="RingBuffer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Parse.h">
+      <Filter>Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Parse</Filter>
+    </ClInclude>
+    <ClInclude Include="NetServer.h">
+      <Filter>Server\NetServer</Filter>
+    </ClInclude>
+    <ClInclude Include="LanServer.h">
+      <Filter>Server\LanServer</Filter>
+    </ClInclude>
+    <ClInclude Include="MonitoringServer.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DB_Connector.cpp">
+      <Filter>DataBase</Filter>
+    </ClCompile>
+    <ClCompile Include="APIHook.cpp">
+      <Filter>Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Dump.cpp">
+      <Filter>Dump</Filter>
+    </ClCompile>
+    <ClCompile Include="Log.cpp">
+      <Filter>Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="RingBuffer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="Parse.cpp">
+      <Filter>Parse</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetServer.cpp">
+      <Filter>Server\NetServer</Filter>
+    </ClCompile>
+    <ClCompile Include="LanServer.cpp">
+      <Filter>Server\LanServer</Filter>
+    </ClCompile>
+    <ClCompile Include="MonitoringServer.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
