@@ -72,6 +72,9 @@
     <ClInclude Include="MonitoringServer.h">
       <Filter>Server</Filter>
     </ClInclude>
+    <ClInclude Include="MonitorProtocol.h">
+      <Filter>Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DB_Connector.cpp">
