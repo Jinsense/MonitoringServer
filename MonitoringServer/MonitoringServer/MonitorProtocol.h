@@ -11,6 +11,9 @@ CommonProtocol.h 의 채팅,로그인 등 패킷변동사항이 많아서
 # 최종 프로젝트 채팅변경사항 - MO 서버 구성으로 방(채널) 개념의 채팅서버로 변경됩니다.
 */
 
+#ifndef _SERVER_NETWORK_PROTOCOL_H_
+#define _SERVER_NETWORK_PROTOCOL_H_
+
 enum en_PACKET_TYPE
 {
 	//------------------------------------------------------
@@ -241,3 +244,4 @@ enum en_PACKET_SS_MONITOR_DATA_UPDATE
 
 };
 
+#endif

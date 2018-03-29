@@ -105,8 +105,6 @@ bool CNetServer::ServerStart(WCHAR *pOpenIP, int iPort, int iMaxWorkerThread,
 	}
 	wprintf(L"[Server :: Server_Start]	WorkerThread Create\n");
 
-	m_hMonitorThread = (HANDLE)_beginthreadex(NULL, 0, &MonitorThread,
-		(LPVOID)this, 0, NULL);
 	m_hAllthread[m_iAllThreadCnt++] = m_hMonitorThread;
 	wprintf(L"[Server :: Server_Start]	MonitorThread Create\n");
 	wprintf(L"[Server :: Server_Start]	Complete\n");

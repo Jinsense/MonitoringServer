@@ -18,6 +18,7 @@
 #define		LAN_QUEUE_SIZE			10000
 #define		LAN_HEADER_SIZE			2
 #define		LAN_MONITOR_NUM			42
+#define		LAN_SERVER_NUM			10
 
 #define		SET_INDEX(Index, SessionKey)		Index = Index << 48; SessionKey = Index | SessionKey;
 #define		GET_INDEX(Index, SessionKey)		Index = SessionKey >> 48;
@@ -31,14 +32,23 @@ typedef struct st_MONITOR
 	int Max;
 	float Avr;
 	bool Recv;
+	st_MONITOR()
+	{
+		Type = NULL, Value = NULL, TimeStamp = NULL, Min = 0xffffffff, Max = 0, Avr = NULL, Recv = false;
+	}
 }MONITOR;
 
 typedef struct st_ServerInfo
 {
+	bool Login;
 	int Index;
 	WCHAR IP[16];
 	USHORT Port;
 	WCHAR ServerName[32];
+	st_ServerInfo()
+	{
+		Login = false, Index = NULL, ZeroMemory(&IP, sizeof(IP)), Port = NULL, ZeroMemory(&ServerName, sizeof(ServerName));
+	}
 }SERVERINFO;
 
 typedef struct st_ClientInfo
@@ -104,8 +114,6 @@ public:
 		bool bNodelay, int iMaxSession);
 	bool				ServerStop();
 	bool				SendPacket(unsigned __int64 iClientID, CPacket *pPacket);
-	bool				ChatReqLoginSendPacket(CPacket *pPacket);
-	bool				GameReqLoginSendPacket(CPacket *pPacket);
 	bool				GetShutDownMode() { return _bShutdown; }
 	bool				GetWhiteIPMode() { return _bWhiteIPMode; }
 	bool				SetShutDownMode(bool bFlag);
@@ -161,9 +169,10 @@ public:
 	unsigned __int64		_iSendPacketTPS;
 	unsigned __int64		_iConnectClient;
 
-	SERVERINFO			_ChatServerInfo;
-	SERVERINFO			_GameServerInfo;
-
+	SERVERINFO				_ServerInfo[LAN_SERVER_NUM];
+	//	모니터링 측정 데이터 변수	//
+	MONITOR					_Monitor[LAN_MONITOR_NUM];
+	
 private:
 	CLockFreeStack<UINT64*>	_SessionStack;
 	LANCOMPARE				*_pIOCompare;
@@ -184,9 +193,6 @@ private:
 	unsigned __int64		_iClientIDCnt;
 
 	CMonitoringServer			*_pMonitor;
-
-	//	모니터링 측정 데이터 변수	//
-	MONITOR					_Monitor[LAN_MONITOR_NUM];
 };
 
 #endif 

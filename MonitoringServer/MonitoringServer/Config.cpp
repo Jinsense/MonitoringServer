@@ -22,15 +22,15 @@ CConfig::CConfig()
 	ZeroMemory(&SESSIONKEY, sizeof(SESSIONKEY));
 	SESSIONKEY_SIZE = eNUM_BUF;
 
-	ZeroMemory(&ACCOUNT_IP, sizeof(ACCOUNT_IP));
-	ACCOUNT_IP_SIZE = eNUM_BUF;
-	ACCOUNT_PORT = NULL;
-	ZeroMemory(&ACCOUNT_USER, sizeof(ACCOUNT_USER));
-	ACCOUNT_USER_SIZE = eNUM_BUF;
-	ZeroMemory(&ACCOUNT_PASSWORD, sizeof(ACCOUNT_PASSWORD));
-	ACCOUNT_PASSWORD_SIZE = eNUM_BUF;
-	ZeroMemory(&ACCOUNT_DBNAME, sizeof(ACCOUNT_DBNAME));
-	ACCOUNT_DBNAME_SIZE = eNUM_BUF;
+	ZeroMemory(&LOGDB_IP, sizeof(LOGDB_IP));
+	LOGDB_IP_SIZE = eNUM_BUF;
+	LOGDB_PORT = NULL;
+	ZeroMemory(&LOGDB_USER, sizeof(LOGDB_USER));
+	LOGDB_USER_SIZE = eNUM_BUF;
+	ZeroMemory(&LOGDB_PASSWORD, sizeof(LOGDB_PASSWORD));
+	LOGDB_PASSWORD_SIZE = eNUM_BUF;
+	ZeroMemory(&LOGDB_DBNAME, sizeof(LOGDB_DBNAME));
+	LOGDB_DBNAME_SIZE = eNUM_BUF;
 
 	ZeroMemory(&IP, sizeof(IP));
 }
@@ -43,7 +43,7 @@ CConfig::~CConfig()
 bool CConfig::Set()
 {
 	bool res = true;
-	res = _Parse.LoadFile(L"LoginServer_Config.ini");
+	res = _Parse.LoadFile(L"MonitoringServer_Config.ini");
 	if (false == res)
 		return false;
 	res = _Parse.ProvideArea("NETWORK");
@@ -72,14 +72,14 @@ bool CConfig::Set()
 	_Parse.GetValue("SESSIONKEY", &SESSIONKEY[0], &SESSIONKEY_SIZE);
 
 	_Parse.ProvideArea("DATABASE");
-	_Parse.GetValue("ACCOUNT_IP", &ACCOUNT_IP[0], &ACCOUNT_IP_SIZE);
+	_Parse.GetValue("LOGDB_IP", &LOGDB_IP[0], &LOGDB_IP_SIZE);
 	//	_Parse.UTF8toUTF16(IP, ACCOUNT_IP, sizeof(ACCOUNT_IP));
-	_Parse.GetValue("ACCOUNT_PORT", &ACCOUNT_PORT);
-	_Parse.GetValue("ACCOUNT_USER", &ACCOUNT_USER[0], &ACCOUNT_USER_SIZE);
+	_Parse.GetValue("LOGDB_PORT", &LOGDB_PORT);
+	_Parse.GetValue("LOGDB_USER", &LOGDB_USER[0], &LOGDB_USER_SIZE);
 	//	_Parse.UTF8toUTF16(IP, ACCOUNT_USER, sizeof(ACCOUNT_USER));
-	_Parse.GetValue("ACCOUNT_PASSWORD", &ACCOUNT_PASSWORD[0], &ACCOUNT_PASSWORD_SIZE);
+	_Parse.GetValue("LOGDB_PASSWORD", &LOGDB_PASSWORD[0], &LOGDB_PASSWORD_SIZE);
 	//	_Parse.UTF8toUTF16(IP, ACCOUNT_PASSWORD, sizeof(ACCOUNT_PASSWORD));
-	_Parse.GetValue("ACCOUNT_DBNAME", &ACCOUNT_DBNAME[0], &ACCOUNT_DBNAME_SIZE);
+	_Parse.GetValue("LOGDB_DBNAME", &LOGDB_DBNAME[0], &LOGDB_DBNAME_SIZE);
 	//	_Parse.UTF8toUTF16(IP, ACCOUNT_DBNAME, sizeof(ACCOUNT_DBNAME));
 
 	return true;

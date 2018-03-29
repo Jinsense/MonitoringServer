@@ -10,18 +10,19 @@
 #include "NetServer.h"
 #include "DB_Connector.h"
 
-typedef struct st_ClientInfo
+typedef struct st_MonitorInfo
 {
 	unsigned __int64 iClientID;
 	char			IP[20];
 	unsigned short	Port;
-}INFO;
+}MONITORINGINFO;
 
 extern CConfig Config;
 class CLanServer;
 
 class CMonitoringServer : public CNetServer
 {
+public:
 	CMonitoringServer();
 	~CMonitoringServer();
 
@@ -29,11 +30,11 @@ protected:
 	virtual void		OnClientJoin(st_SessionInfo Info);
 	virtual void		OnClientLeave(unsigned __int64 iClientID);
 	virtual void		OnConnectionRequest(WCHAR * pClientIP, int iPort);
-	virtual void		OnError(int iErrorCode, WCHAR *pError) = 0;
+	virtual void		OnError(int iErrorCode, WCHAR *pError);
 	virtual bool		OnRecv(unsigned __int64 iClientID, CPacket *pPacket);
 
-public:
-	static unsigned __stdcall	UpdateThread(void *pParam)
+private:
+	static unsigned __stdcall UpdateThread(void *pParam)
 	{
 		CMonitoringServer *pUpdateThread = (CMonitoringServer*)pParam;
 		if (NULL == pUpdateThread)
@@ -45,14 +46,28 @@ public:
 		return true;
 	}
 	void		UpdateThread_Update();
-	bool		MakePacket(BYTE Type, CPacket *pPacket);
+
+	static unsigned __stdcall DBWriteThread(void *pParam)
+	{
+		CMonitoringServer *pDBWriteThread = (CMonitoringServer*)pParam;
+		if (NULL == pDBWriteThread)
+		{
+			wprintf(L"[MonitoringServer :: DBWriteThread] Init Error\n");
+			return false;
+		}
+		pDBWriteThread->DBWriteThread_Update();
+		return true;
+	}
+	void		DBWriteThread_Update();
+
+	bool		MakePacket(BYTE DataType, CPacket *pPacket);
 
 public:
 	CLanServer			*_pLanServer;
 	CDBConnector		_MonitorDB;
 private:
 	SRWLOCK				_DB_srwlock;
-	std::list<INFO*>	_ClientList;
+	std::list<MONITORINGINFO*>	_ClientList;
 	SRWLOCK				_ClientList_srwlock;
 
 	CSystemLog			*_pLog;

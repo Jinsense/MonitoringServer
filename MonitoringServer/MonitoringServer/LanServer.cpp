@@ -36,7 +36,7 @@ CLanServer::CLanServer()
 		_Monitor[i].Max = 0;
 		_Monitor[i].Avr = 0;
 		_Monitor[i].Recv = false;
-	}
+	}	
 }
 
 CLanServer::~CLanServer()
@@ -210,83 +210,6 @@ bool CLanServer::SendPacket(unsigned __int64 iClientID, CPacket *pPacket)
 	return false;
 }
 
-bool CLanServer::ChatReqLoginSendPacket(CPacket *pPacket)
-{
-	int Index = _ChatServerInfo.Index;
-	if (1 == InterlockedIncrement(&_pSessionArray[Index].lIOCount))
-	{
-		if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-		{
-			ClientRelease(&_pSessionArray[Index]);
-		}
-		return false;
-	}
-
-	if (true == _pSessionArray[Index].bRelease)
-	{
-		if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-		{
-			ClientRelease(&_pSessionArray[Index]);
-		}
-		return false;
-	}
-
-	if (_pSessionArray[Index].bLoginFlag != true)
-		return false;
-
-	_iSendPacketTPS++;
-	pPacket->AddRef();
-	pPacket->SetHeader_CustomShort(pPacket->GetDataSize());
-	_pSessionArray[Index].SendQ.Enqueue(pPacket);
-
-	if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-	{
-		ClientRelease(&_pSessionArray[Index]);
-		return false;
-	}
-	SendPost(&_pSessionArray[Index]);
-	return true;
-}
-
-bool CLanServer::GameReqLoginSendPacket(CPacket *pPacket)
-{
-	int Index = _GameServerInfo.Index;
-	if (1 == InterlockedIncrement(&_pSessionArray[Index].lIOCount))
-	{
-		if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-		{
-			ClientRelease(&_pSessionArray[Index]);
-		}
-		return false;
-	}
-
-	if (true == _pSessionArray[Index].bRelease)
-	{
-		if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-		{
-			ClientRelease(&_pSessionArray[Index]);
-		}
-		return false;
-	}
-
-	if (_pSessionArray[Index].bLoginFlag != true)
-		return false;
-
-	_iSendPacketTPS++;
-	pPacket->AddRef();
-	pPacket->SetHeader_CustomShort(pPacket->GetDataSize());
-	_pSessionArray[Index].SendQ.Enqueue(pPacket);
-
-	if (0 == InterlockedDecrement(&_pSessionArray[Index].lIOCount))
-	{
-		ClientRelease(&_pSessionArray[Index]);
-		return false;
-	}
-	SendPost(&_pSessionArray[Index]);
-	return true;
-}
-
-
 bool CLanServer::ServerInit()
 {
 	WSADATA _Data;
@@ -358,6 +281,12 @@ bool CLanServer::ClientRelease(LANSESSION *pSession)
 
 	unsigned __int64 iClientID = pSession->iClientID;
 	unsigned __int64 iIndex = GET_INDEX(iIndex, iClientID);
+
+	_ServerInfo[iIndex].Login = false;
+	_ServerInfo[iIndex].Index = NULL;
+	ZeroMemory(&_ServerInfo[iIndex].IP, sizeof(_ServerInfo[iIndex].IP));
+	_ServerInfo[iIndex].Port = NULL;
+	ZeroMemory(&_ServerInfo[iIndex].ServerName, sizeof(_ServerInfo[iIndex].ServerName));
 
 	InterlockedDecrement(&_iConnectClient);
 	PutIndex(iIndex);
@@ -702,14 +631,16 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 		}
 		else if (dfMONITOR_SERVER_TYPE_GAME == ServerType)
 		{
-			_GameServerInfo.Index = pSession->iClientID >> 48;
-			pPacket->PopData((char*)_GameServerInfo.ServerName, sizeof(_GameServerInfo.ServerName));
+			_ServerInfo[ServerType].Login = true;
+			_ServerInfo[ServerType].Index = pSession->iClientID >> 48;
+			pPacket->PopData((char*)_ServerInfo[ServerType].ServerName, sizeof(_ServerInfo[ServerType].ServerName));
 			pSession->Info.byServerType = dfMONITOR_SERVER_TYPE_GAME;
 		}
 		else if (dfMONITOR_SERVER_TYPE_CHAT == ServerType)
 		{
-			_ChatServerInfo.Index = pSession->iClientID >> 48;
-			pPacket->PopData((char*)_ChatServerInfo.ServerName, sizeof(_ChatServerInfo.ServerName));
+			_ServerInfo[ServerType].Login = true;
+			_ServerInfo[ServerType].Index = pSession->iClientID >> 48;
+			pPacket->PopData((char*)_ServerInfo[ServerType].ServerName, sizeof(_ServerInfo[ServerType].ServerName));
 			pSession->Info.byServerType = dfMONITOR_SERVER_TYPE_CHAT;
 		}
 		else if (dfMONITOR_SERVER_TYPE_AGENT == ServerType)

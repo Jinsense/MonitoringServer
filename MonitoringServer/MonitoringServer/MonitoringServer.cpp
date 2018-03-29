@@ -32,7 +32,7 @@ void CMonitoringServer::OnClientJoin(st_SessionInfo Info)
 		_pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, Info.SessionIP, Info.SessionPort);
 	ReleaseSRWLockExclusive(&_Timer_srwlock);
 	//	클라이언트INFO 동적할당
-	INFO *pInfo = new INFO;
+	MONITORINGINFO *pInfo = new MONITORINGINFO;
 	pInfo->iClientID = Info.iClientID;
 	strcpy_s(pInfo->IP, sizeof(pInfo->IP), Info.SessionIP);
 	pInfo->Port = Info.SessionPort;
@@ -45,9 +45,9 @@ void CMonitoringServer::OnClientJoin(st_SessionInfo Info)
 
 void CMonitoringServer::OnClientLeave(unsigned __int64 iClientID)
 {
-	INFO *pInfo;
+	MONITORINGINFO *pInfo = nullptr;
 	//	클라이언트ID로 리스트에서 검색
-	list<INFO*>::iterator iter;
+	list<MONITORINGINFO*>::iterator iter;
 	AcquireSRWLockExclusive(&_ClientList_srwlock);
 	for (iter = _ClientList.begin(); iter != _ClientList.end(); iter++)
 	{
@@ -123,13 +123,76 @@ void CMonitoringServer::UpdateThread_Update()
 {
 	while (1)
 	{
-
+		Sleep(1000);
+		if (_ClientList.empty())
+			continue;
+	
+		for (int i = 0; i < LAN_MONITOR_NUM; i++)
+		{
+			CPacket *pPacket = CPacket::Alloc();
+			if (false == MakePacket(i + 1, pPacket))
+			{
+				pPacket->Free();
+				continue;
+			}
+			pPacket->AddRef();
+			list<MONITORINGINFO*>::iterator iter;
+			AcquireSRWLockExclusive(&_ClientList_srwlock);
+			for (iter = _ClientList.begin(); iter != _ClientList.end(); iter++)
+			{
+				SendPacket((*iter)->iClientID, pPacket);
+			}
+			ReleaseSRWLockExclusive(&_ClientList_srwlock);
+			pPacket->Free();
+		}
 	}
 	return;
 }
 
-bool CMonitoringServer::MakePacket(BYTE Type, CPacket *pPacket)
+void CMonitoringServer::DBWriteThread_Update()
 {
+	bool Res;
+	while (1)
+	{
+		Sleep(60000);
+		for (int i = 0; i < LAN_MONITOR_NUM; i++)
+		{
+			if (true == _pLanServer->_Monitor[i].Recv)
+			{
+				//	ServerNo는 추후 수정
+				Res = _MonitorDB.Query_Save(L"INSERT INTO `logdb`.`monitorlog` (`logtime`, `serverno`, `type`, `value`, `min`, `max`, `avr`) VALUES (now(), '2', '%d', '%d', '%d', '%d', '%f'); ",
+					_pLanServer->_Monitor[i].Type, _pLanServer->_Monitor[i].Value, _pLanServer->_Monitor[i].Min, _pLanServer->_Monitor[i].Max, _pLanServer->_Monitor[i].Avr);
+				if (false == Res)
+					_pLog->Log(L"Error", LOG_SYSTEM, L"INSERT INTO `logdb`.`monitorlog` (`logtime`, `serverno`, `type`, `value`, `min`, `max`, `avr`) VALUES (now(), '2', '%d', '%d', '%d', '%d', '%f'); ",
+						_pLanServer->_Monitor[i].Type, _pLanServer->_Monitor[i].Value, _pLanServer->_Monitor[i].Min, _pLanServer->_Monitor[i].Max, _pLanServer->_Monitor[i].Avr);
+			}
+		}
+	}
+	return;
+}
 
+bool CMonitoringServer::MakePacket(BYTE DataType, CPacket *pPacket)
+{
+	if (false == _pLanServer->_Monitor[DataType - 1].Recv)
+		return false;
+	WORD Type = en_PACKET_CS_MONITOR_TOOL_DATA_UPDATE;
+	BYTE ServerNo;
+	if (1 <= DataType && 5 >= DataType)
+		ServerNo = dfMONITOR_SERVER_TYPE_GAME;		//	하드웨어 수집 서버 번호 지정
+	else if (6 <= DataType && 12 >= DataType)
+		ServerNo = dfMONITOR_SERVER_TYPE_GAME;		//	매치메이킹 서버 번호 지정
+	else if (13 <= DataType && 23 >= DataType)
+		ServerNo = dfMONITOR_SERVER_TYPE_GAME;		//	마스터 서버 번호 지정
+	else if (24 <= DataType && 35 >= DataType)
+		ServerNo = dfMONITOR_SERVER_TYPE_GAME;		//	배틀 서버 번호 지정
+	else if (36 <= DataType && 42 >= DataType)
+		ServerNo = dfMONITOR_SERVER_TYPE_CHAT;		//	채팅 서버 번호 지정
+
+	BYTE _DataType = DataType;
+	int DataValue = _pLanServer->_Monitor[DataType - 1].Value;
+	int TimeStamp = _pLanServer->_Monitor[DataType - 1].TimeStamp;
+	_pLanServer->_Monitor[DataType - 1].Recv = false;
+
+	*pPacket << Type << ServerNo << _DataType << DataValue << TimeStamp;
 	return true;
 }

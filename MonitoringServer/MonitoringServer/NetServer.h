@@ -118,22 +118,9 @@ private:
 		return true;
 	}
 
-	static unsigned int WINAPI MonitorThread(LPVOID arg)
-	{
-		CNetServer *_pMonitorThread = (CNetServer*)arg;
-		if (NULL == _pMonitorThread)
-		{
-			wprintf(L"[Server :: MonitorThread]	Init Error\n");
-			return false;
-		}
-		_pMonitorThread->MonitorThread_Update();
-		return true;
-	}
-
 	void				PutIndex(unsigned __int64 iIndex);
 	void				WorkerThread_Update();
 	void				AcceptThread_Update();
-	virtual void		MonitorThread_Update() = 0;
 	void				StartRecvPost(st_Session *pSession);
 	void				RecvPost(st_Session *pSession);
 	void				SendPost(st_Session *pSession);
