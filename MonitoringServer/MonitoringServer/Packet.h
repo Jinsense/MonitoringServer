@@ -19,9 +19,9 @@ public:
 		PAYLOAD_SIZE = 1024,
 		BUFFER_SIZE = HEADER_SIZE + PAYLOAD_SIZE,
 
-		PACKET_CODE = 119,
-		PACKET_KEY1 = 50,
-		PACKET_KEY2 = 132,
+		PACKET_CODE = 109,
+		PACKET_KEY1 = 30,
+		PACKET_KEY2 = 91,
 	};
 
 #pragma pack(push, 1)   

@@ -41,25 +41,13 @@ typedef struct st_MONITOR
 typedef struct st_ServerInfo
 {
 	bool Login;
-	int Index;
-	WCHAR IP[16];
+	char IP[20];
 	USHORT Port;
-	WCHAR ServerName[32];
 	st_ServerInfo()
 	{
-		Login = false, Index = NULL, ZeroMemory(&IP, sizeof(IP)), Port = NULL, ZeroMemory(&ServerName, sizeof(ServerName));
+		Login = false, ZeroMemory(&IP, sizeof(IP)), Port = NULL;
 	}
 }SERVERINFO;
-
-typedef struct st_ClientInfo
-{
-	unsigned __int64 iClientID;
-	SOCKADDR_IN Addr;
-	BYTE byServerType;
-
-	st_ClientInfo() :
-		iClientID(NULL) {}
-}LANINFO;
 
 typedef struct st_RELEASE_COMPARE
 {
@@ -73,8 +61,11 @@ typedef struct st_RELEASE_COMPARE
 
 typedef struct st_Client
 {
+	char				IP[20];
+	unsigned short		Port;
 	bool				bLoginFlag;
 	bool				bRelease;
+	int					Index;
 	long				lIOCount;
 	long				lSendFlag;
 	long				lSendCount;
@@ -85,8 +76,6 @@ typedef struct st_Client
 	CRingBuffer			RecvQ;
 	CRingBuffer			PacketQ;
 	CLockFreeQueue<CPacket*> SendQ;
-	LANINFO				Info;
-
 	st_Client() :
 		RecvQ(LAN_QUEUE_SIZE),
 		PacketQ(LAN_QUEUE_SIZE),

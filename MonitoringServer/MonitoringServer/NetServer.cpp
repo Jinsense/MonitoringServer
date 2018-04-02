@@ -440,6 +440,8 @@ void CNetServer::AcceptThread_Update()
 		pSessionArray[*_iSessionNum].Info.iClientID =
 			pSessionArray[*_iSessionNum].iClientID;
 		inet_ntop(AF_INET, &_ClientAddr.sin_addr, pSessionArray[*_iSessionNum].Info.SessionIP, sizeof(pSessionArray[*_iSessionNum].Info.SessionIP));
+
+		//	임시 변수 만들어서 IP를 UTF8을 UTF16으로 변환시켜서 저장
 		pSessionArray[*_iSessionNum].Info.SessionPort = _ClientAddr.sin_port;
 
 		CreateIoCompletionPort((HANDLE)clientSock, m_hIOCP,
@@ -688,7 +690,7 @@ void CNetServer::CompleteRecv(st_Session *pSession, DWORD dwTransfered)
 		}
 
 		//		if (static_cast<int>(CPacket::en_PACKETDEFINE::PACKET_CODE) != _Header.byCode)
-		if (_Config.PACKET_CODE != _Header.byCode)
+		if (Config.PACKET_CODE != _Header.byCode)
 		{
 			shutdown(pSession->sock, SD_BOTH);
 			return;
@@ -794,4 +796,18 @@ void CNetServer::PutIndex(unsigned __int64 iIndex)
 	AcquireSRWLockExclusive(&m_srw);
 	SessionStack.Push(&pIndex[iIndex]);
 	ReleaseSRWLockExclusive(&m_srw);
+}
+
+void CNetServer::UTF8toUTF16(const char *szText, WCHAR *szBuf, int iBufLen)
+{
+	int iRe = MultiByteToWideChar(CP_UTF8, 0, szText, strlen(szText), szBuf, iBufLen);
+	if (iRe < iBufLen)
+		szBuf[iRe] = L'\0';
+	return;
+}
+
+void CNetServer::UTF16toUTF8(WCHAR *szText, char *szBuf, int iBufLen)
+{
+	int iRe = WideCharToMultiByte(CP_UTF8, 0, szText, lstrlenW(szText), szBuf, iBufLen, NULL, NULL);
+	return;
 }

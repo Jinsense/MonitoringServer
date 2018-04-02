@@ -2,6 +2,7 @@
 #define _SERVER_SERVER_NETSERVER_H_
 
 //#include "CommonProtocol.h"
+#include "Config.h"
 #include "MonitorProtocol.h"
 #include "Packet.h"
 #include "RingBuffer.h"
@@ -16,6 +17,8 @@
 
 #define		SET_INDEX(Index, SessionKey)		Index = Index << 48; SessionKey = Index | SessionKey;
 #define		GET_INDEX(Index, SessionKey)		Index = SessionKey >> 48;
+
+extern CConfig Config;
 
 struct st_SessionInfo
 {
@@ -89,6 +92,9 @@ public:
 	st_Session*			SessionAcquireLock(unsigned __int64 iClientID);
 	bool				SessionAcquireFree(st_Session *pSession);
 
+	void				UTF8toUTF16(const char *szText, WCHAR *szBuf, int iBufLen);
+	void				UTF16toUTF8(WCHAR *szText, char *szBuf, int iBufLen);
+
 private:
 	bool				ServerInit();
 	bool				ClientShutdown(st_Session *pSession);
@@ -155,8 +161,6 @@ public:
 
 	CSystemLog				*m_Log;
 	SRWLOCK					m_srw;
-	CConfig					_Config;
 };
-
 
 #endif 

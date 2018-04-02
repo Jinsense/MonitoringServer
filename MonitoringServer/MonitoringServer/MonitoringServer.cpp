@@ -24,12 +24,15 @@ CMonitoringServer::~CMonitoringServer()
 
 void CMonitoringServer::OnClientJoin(st_SessionInfo Info)
 {
+	WCHAR IP[20];
+	UTF8toUTF16(Info.SessionIP, IP, sizeof(Info.SessionIP));
 	AcquireSRWLockExclusive(&_Timer_srwlock);
+	_Timer = time(NULL);
 	localtime_s(_pTime, &_Timer);
 	//	접속 IP, Port, 시간 출력 및 로그로 남김
-	wprintf(L"[Time : %d/%d/%d %d:%d:%d] IP : %s, Port : %d", _pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, Info.SessionIP, Info.SessionPort);
-	_pLog->Log(L"Connect", LOG_SYSTEM, L"[Time : %d/%d/%d %d:%d:%d] IP : %s, Port : %d", 
-		_pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, Info.SessionIP, Info.SessionPort);
+	printf("Connect : %d/%d/%d %d:%d:%d IP : %s, Port : %d\n", _pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, Info.SessionIP, Info.SessionPort);
+	_pLog->Log(L"Connect", LOG_SYSTEM, L"Connect : %d/%d/%d %d:%d:%d IP : %s, Port : %d", 
+		_pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, IP, Info.SessionPort);
 	ReleaseSRWLockExclusive(&_Timer_srwlock);
 	//	클라이언트INFO 동적할당
 	MONITORINGINFO *pInfo = new MONITORINGINFO;
@@ -45,6 +48,7 @@ void CMonitoringServer::OnClientJoin(st_SessionInfo Info)
 
 void CMonitoringServer::OnClientLeave(unsigned __int64 iClientID)
 {
+	WCHAR IP[20];
 	MONITORINGINFO *pInfo = nullptr;
 	//	클라이언트ID로 리스트에서 검색
 	list<MONITORINGINFO*>::iterator iter;
@@ -60,11 +64,13 @@ void CMonitoringServer::OnClientLeave(unsigned __int64 iClientID)
 	}
 	ReleaseSRWLockExclusive(&_ClientList_srwlock);
 	//	해제 IP, Port, 시간 출력 및 로그로 남김
+	UTF8toUTF16(pInfo->IP, IP, sizeof(pInfo->IP));
 	AcquireSRWLockExclusive(&_Timer_srwlock);
+	_Timer = time(NULL);
 	localtime_s(_pTime, &_Timer);
-	wprintf(L"[Time : %d/%d/%d %d:%d:%d] IP : %s, Port : %d", _pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, pInfo->IP, pInfo->Port);
-	_pLog->Log(L"Connect", LOG_SYSTEM, L"[Time : %d/%d/%d %d:%d:%d] IP : %s, Port : %d",
-		_pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, pInfo->IP, pInfo->Port);
+	printf("Release : %d/%d/%d %d:%d:%d IP : %s, Port : %d\n", _pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, pInfo->IP, pInfo->Port);
+	_pLog->Log(L"Connect", LOG_SYSTEM, L"Release : %d/%d/%d %d:%d:%d IP : %s, Port : %d",
+		_pTime->tm_year + 1900, _pTime->tm_mon + 1, _pTime->tm_mday, _pTime->tm_hour, _pTime->tm_min, _pTime->tm_sec, IP, pInfo->Port);
 	ReleaseSRWLockExclusive(&_Timer_srwlock);
 	//	클라이언트INFO 할당해제
 	delete pInfo;
@@ -98,9 +104,11 @@ bool CMonitoringServer::OnRecv(unsigned __int64 iClientID, CPacket *pPacket)
 		pNewPacket->Free();
 		return false;
 	}
-	char SessionKey[32];
+
+	char SessionKey[32] = { 0, };
 	pPacket->PopData(SessionKey, sizeof(SessionKey));
-	if (0 != strcmp(SessionKey, Config.SESSIONKEY))
+
+	if (0 != memcmp(&SessionKey, &Config.SESSIONKEY, sizeof(SessionKey)))
 	{
 		Type = en_PACKET_CS_MONITOR_TOOL_RES_LOGIN;
 		BYTE Result = 0;
@@ -114,7 +122,7 @@ bool CMonitoringServer::OnRecv(unsigned __int64 iClientID, CPacket *pPacket)
 	BYTE Result = 1;
 	CPacket *pNewPacket = CPacket::Alloc();
 	*pNewPacket << Type << Result;
-	SendPacketAndDisConnect(iClientID, pNewPacket);
+	SendPacket(iClientID, pNewPacket);
 	pNewPacket->Free();
 	return true;
 }

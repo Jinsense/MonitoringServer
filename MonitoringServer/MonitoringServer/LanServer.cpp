@@ -282,11 +282,11 @@ bool CLanServer::ClientRelease(LANSESSION *pSession)
 	unsigned __int64 iClientID = pSession->iClientID;
 	unsigned __int64 iIndex = GET_INDEX(iIndex, iClientID);
 
-	_ServerInfo[iIndex].Login = false;
-	_ServerInfo[iIndex].Index = NULL;
-	ZeroMemory(&_ServerInfo[iIndex].IP, sizeof(_ServerInfo[iIndex].IP));
-	_ServerInfo[iIndex].Port = NULL;
-	ZeroMemory(&_ServerInfo[iIndex].ServerName, sizeof(_ServerInfo[iIndex].ServerName));
+	
+	printf("[LanRelease] IP : %s\n", _ServerInfo[pSession->Index].IP);
+	ZeroMemory(&_ServerInfo[pSession->Index].IP, sizeof(_ServerInfo[pSession->Index].IP));
+	_ServerInfo[pSession->Index].Port = NULL;
+	_ServerInfo[pSession->Index].Login = false;
 
 	InterlockedDecrement(&_iConnectClient);
 	PutIndex(iIndex);
@@ -375,9 +375,10 @@ void CLanServer::AcceptThread_Update()
 		_pSessionArray[*_iSessionNum].lSendCount = 0;
 		InterlockedIncrement(&_iConnectClient);
 		_pSessionArray[*_iSessionNum].bLoginFlag = TRUE;
-		_pSessionArray[*_iSessionNum].Info.iClientID =
-			_pSessionArray[*_iSessionNum].iClientID;
-		_pSessionArray[*_iSessionNum].Info.Addr = _ClientAddr;
+
+		inet_ntop(AF_INET, &_ClientAddr.sin_addr, _pSessionArray[*_iSessionNum].IP, sizeof(_pSessionArray[*_iSessionNum].IP));
+		_pSessionArray[*_iSessionNum].Port = _ClientAddr.sin_port;
+
 		_pSessionArray[*_iSessionNum].bRelease = FALSE;
 
 		InterlockedIncrement(&_pSessionArray[*_iSessionNum].lIOCount);
@@ -622,31 +623,16 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 
 	if (en_PACKET_SS_MONITOR_LOGIN == Type)
 	{
-		BYTE ServerType;
-		*pPacket >> ServerType;
+		int ServerNo;
+		*pPacket >> ServerNo;
 
-		if (dfMONITOR_SERVER_TYPE_LOGIN == ServerType)
-		{
-				
-		}
-		else if (dfMONITOR_SERVER_TYPE_GAME == ServerType)
-		{
-			_ServerInfo[ServerType].Login = true;
-			_ServerInfo[ServerType].Index = pSession->iClientID >> 48;
-			pPacket->PopData((char*)_ServerInfo[ServerType].ServerName, sizeof(_ServerInfo[ServerType].ServerName));
-			pSession->Info.byServerType = dfMONITOR_SERVER_TYPE_GAME;
-		}
-		else if (dfMONITOR_SERVER_TYPE_CHAT == ServerType)
-		{
-			_ServerInfo[ServerType].Login = true;
-			_ServerInfo[ServerType].Index = pSession->iClientID >> 48;
-			pPacket->PopData((char*)_ServerInfo[ServerType].ServerName, sizeof(_ServerInfo[ServerType].ServerName));
-			pSession->Info.byServerType = dfMONITOR_SERVER_TYPE_CHAT;
-		}
-		else if (dfMONITOR_SERVER_TYPE_AGENT == ServerType)
-		{
+		pSession->Index = ServerNo;
+		strcpy_s(_ServerInfo[ServerNo].IP, sizeof(_ServerInfo[ServerNo].IP), pSession->IP);
+		_ServerInfo[ServerNo].Port = pSession->Port;
+		_ServerInfo[ServerNo].Login = true;
 
-		}
+		printf("[LanConnect] ServerNo : %d, IP : %s\n", ServerNo, _ServerInfo[ServerNo].IP);
+
 	}
 	else if (en_PACKET_SS_MONITOR_DATA_UPDATE == Type)
 	{
