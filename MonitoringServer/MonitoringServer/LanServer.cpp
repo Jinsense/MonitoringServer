@@ -662,6 +662,7 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 		AcquireSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
 		for (iter = _pMonitor->_ClientList.begin(); iter != _pMonitor->_ClientList.end(); iter++)
 		{
+			
 			_pMonitor->SendPacket((*iter)->iClientID, pNewPacket);
 		}
 		ReleaseSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
