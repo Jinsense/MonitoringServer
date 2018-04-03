@@ -143,7 +143,6 @@ private:
 	HANDLE					m_hIOCP;
 	HANDLE					m_hWorkerThread[100];
 	HANDLE					m_hAcceptThread;
-	HANDLE					m_hMonitorThread;
 	HANDLE					m_hAllthread[200];
 
 	unsigned __int64		m_iAllThreadCnt;

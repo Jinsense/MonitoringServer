@@ -14,6 +14,11 @@ CMonitoringServer::CMonitoringServer()
 	InitializeSRWLock(&_Timer_srwlock);
 	_pLanServer = new CLanServer;
 	_pLanServer->Set(this);
+
+	_DBThread = (HANDLE)_beginthreadex(NULL, 0, &DBWriteThread, (LPVOID)this, 0, NULL);
+	wprintf(L"[Server :: Monitor]	DBWriteThread Create\n");
+//	_Updatethread = (HANDLE)_beginthreadex(NULL, 0, &UpdateThread, (LPVOID)this, 0, NULL);
+//	wprintf(L"[Server :: Monitor]	UpdateThread Create\n");
 }
 
 CMonitoringServer::~CMonitoringServer()
@@ -127,35 +132,35 @@ bool CMonitoringServer::OnRecv(unsigned __int64 iClientID, CPacket *pPacket)
 	return true;
 }
 
-void CMonitoringServer::UpdateThread_Update()
-{
-	while (1)
-	{
-		Sleep(1000);
-		if (_ClientList.empty())
-			continue;
-	
-		for (int i = 0; i < LAN_MONITOR_NUM; i++)
-		{
-			CPacket *pPacket = CPacket::Alloc();
-			if (false == MakePacket(i + 1, pPacket))
-			{
-				pPacket->Free();
-				continue;
-			}
-			pPacket->AddRef();
-			list<MONITORINGINFO*>::iterator iter;
-			AcquireSRWLockExclusive(&_ClientList_srwlock);
-			for (iter = _ClientList.begin(); iter != _ClientList.end(); iter++)
-			{
-				SendPacket((*iter)->iClientID, pPacket);
-			}
-			ReleaseSRWLockExclusive(&_ClientList_srwlock);
-			pPacket->Free();
-		}
-	}
-	return;
-}
+//void CMonitoringServer::UpdateThread_Update()
+//{
+//	while (1)
+//	{
+//		Sleep(1000);
+//		if (_ClientList.empty())
+//			continue;
+//	
+//		for (int i = 0; i < LAN_MONITOR_NUM; i++)
+//		{
+//			CPacket *pPacket = CPacket::Alloc();
+//			if (false == MakePacket(i + 1, pPacket))
+//			{
+//				pPacket->Free();
+//				continue;
+//			}
+//			pPacket->AddRef();
+//			list<MONITORINGINFO*>::iterator iter;
+//			AcquireSRWLockExclusive(&_ClientList_srwlock);
+//			for (iter = _ClientList.begin(); iter != _ClientList.end(); iter++)
+//			{
+//				SendPacket((*iter)->iClientID, pPacket);
+//			}
+//			ReleaseSRWLockExclusive(&_ClientList_srwlock);
+//			pPacket->Free();
+//		}
+//	}
+//	return;
+//}
 
 void CMonitoringServer::DBWriteThread_Update()
 {
@@ -173,6 +178,7 @@ void CMonitoringServer::DBWriteThread_Update()
 				if (false == Res)
 					_pLog->Log(L"Error", LOG_SYSTEM, L"INSERT INTO `logdb`.`monitorlog` (`logtime`, `serverno`, `type`, `value`, `min`, `max`, `avr`) VALUES (now(), '2', '%d', '%d', '%d', '%d', '%f'); ",
 						_pLanServer->_Monitor[i].Type, _pLanServer->_Monitor[i].Value, _pLanServer->_Monitor[i].Min, _pLanServer->_Monitor[i].Max, _pLanServer->_Monitor[i].Avr);
+				_pLanServer->_Monitor[i].Recv = false;
 			}
 		}
 	}
@@ -199,7 +205,6 @@ bool CMonitoringServer::MakePacket(BYTE DataType, CPacket *pPacket)
 	BYTE _DataType = DataType;
 	int DataValue = _pLanServer->_Monitor[DataType - 1].Value;
 	int TimeStamp = _pLanServer->_Monitor[DataType - 1].TimeStamp;
-	_pLanServer->_Monitor[DataType - 1].Recv = false;
 
 	*pPacket << Type << ServerNo << _DataType << DataValue << TimeStamp;
 	return true;

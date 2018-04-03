@@ -164,7 +164,8 @@ unsigned __int64 CLanServer::GetClientCount()
 
 bool CLanServer::SendPacket(unsigned __int64 iClientID, CPacket *pPacket)
 {
-	unsigned __int64 _iIndex = GET_INDEX(_iIndex, iClientID);
+	unsigned __int64 ID = iClientID;
+	unsigned __int64 _iIndex = GET_INDEX(_iIndex, ID);
 
 	if (1 == InterlockedIncrement(&_pSessionArray[_iIndex].lIOCount))
 	{
@@ -645,12 +646,27 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 		_Monitor[Type].TimeStamp = TimeStamp;
 		_Monitor[Type].Value = DataValue;
 		if (DataValue < _Monitor[Type].Min)
-			_Monitor[Type].Min;
+			_Monitor[Type].Min = DataValue;
 		if (DataValue > _Monitor[Type].Max)
-			_Monitor[Type].Max;
+			_Monitor[Type].Max = DataValue;
 
 		_Monitor[Type].Avr = (_Monitor[Type].Avr + DataValue) / 2;
 		_Monitor[Type].Recv = true;
+
+		if (_pMonitor->_ClientList.empty())
+			return true;
+		CPacket *pNewPacket = CPacket::Alloc();
+		_pMonitor->MakePacket(Type, pNewPacket);
+		pNewPacket->AddRef();
+		list<MONITORINGINFO*>::iterator iter;
+		AcquireSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
+		for (iter = _pMonitor->_ClientList.begin(); iter != _pMonitor->_ClientList.end(); iter++)
+		{
+			_pMonitor->SendPacket((*iter)->iClientID, pNewPacket);
+		}
+		ReleaseSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
+		pNewPacket->Free();
+
 		return true;
 	}
 	return true;

@@ -26,6 +26,7 @@ public:
 	CMonitoringServer();
 	~CMonitoringServer();
 
+	bool				MakePacket(BYTE DataType, CPacket *pPacket);
 protected:
 	virtual void		OnClientJoin(st_SessionInfo Info);
 	virtual void		OnClientLeave(unsigned __int64 iClientID);
@@ -33,19 +34,20 @@ protected:
 	virtual void		OnError(int iErrorCode, WCHAR *pError);
 	virtual bool		OnRecv(unsigned __int64 iClientID, CPacket *pPacket);
 
+
 private:
-	static unsigned __stdcall UpdateThread(void *pParam)
-	{
-		CMonitoringServer *pUpdateThread = (CMonitoringServer*)pParam;
-		if (NULL == pUpdateThread)
-		{
-			wprintf(L"[MonitoringServer :: UpdateThread] Init Error\n");
-			return false;
-		}
-		pUpdateThread->UpdateThread_Update();
-		return true;
-	}
-	void		UpdateThread_Update();
+//	static unsigned __stdcall UpdateThread(void *pParam)
+	//{
+	//	CMonitoringServer *pUpdateThread = (CMonitoringServer*)pParam;
+	//	if (NULL == pUpdateThread)
+	//	{
+	//		wprintf(L"[MonitoringServer :: UpdateThread] Init Error\n");
+	//		return false;
+	//	}
+	//	pUpdateThread->UpdateThread_Update();
+	//	return true;
+	//}
+//	void		UpdateThread_Update();
 
 	static unsigned __stdcall DBWriteThread(void *pParam)
 	{
@@ -60,16 +62,16 @@ private:
 	}
 	void		DBWriteThread_Update();
 
-	bool		MakePacket(BYTE DataType, CPacket *pPacket);
-
 public:
 	CLanServer			*_pLanServer;
+	std::list<MONITORINGINFO*>	_ClientList;
+	SRWLOCK				_ClientList_srwlock;
 	CDBConnector		_MonitorDB;
 private:
 	SRWLOCK				_DB_srwlock;
-	std::list<MONITORINGINFO*>	_ClientList;
-	SRWLOCK				_ClientList_srwlock;
 
+	HANDLE				_DBThread;
+//	HANDLE				_Updatethread;
 	CSystemLog			*_pLog;
 
 	struct tm			*_pTime;

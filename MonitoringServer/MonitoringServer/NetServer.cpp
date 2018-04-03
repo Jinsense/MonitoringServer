@@ -105,7 +105,6 @@ bool CNetServer::ServerStart(WCHAR *pOpenIP, int iPort, int iMaxWorkerThread,
 	}
 	wprintf(L"[Server :: Server_Start]	WorkerThread Create\n");
 
-	m_hAllthread[m_iAllThreadCnt++] = m_hMonitorThread;
 	wprintf(L"[Server :: Server_Start]	MonitorThread Create\n");
 	wprintf(L"[Server :: Server_Start]	Complete\n");
 	return true;
@@ -150,7 +149,8 @@ unsigned __int64 CNetServer::GetClientCount()
 
 bool CNetServer::SendPacket(unsigned __int64 iClientID, CPacket *pPacket)
 {
-	unsigned __int64 _iIndex = GET_INDEX(_iIndex, iClientID);
+	unsigned __int64 ID = iClientID;
+	unsigned __int64 _iIndex = GET_INDEX(_iIndex, ID);
 
 	st_Session *_pSession = SessionAcquireLock(iClientID);
 	if (nullptr == _pSession)
@@ -186,7 +186,8 @@ bool CNetServer::SendPacket(unsigned __int64 iClientID, CPacket *pPacket)
 
 bool CNetServer::SendPacketAndDisConnect(unsigned __int64 iClientID, CPacket *pPacket)
 {
-	unsigned __int64 _iIndex = GET_INDEX(_iIndex, iClientID);
+	unsigned __int64 ID = iClientID;
+	unsigned __int64 _iIndex = GET_INDEX(_iIndex, ID);
 
 	st_Session *_pSession = SessionAcquireLock(iClientID);
 	if (nullptr == _pSession)
@@ -310,8 +311,8 @@ bool CNetServer::ClientRelease(st_Session *pSession)
 	}*/
 
 	OnClientLeave(iSessionKey);
-
-	unsigned __int64 iIndex = GET_INDEX(iIndex, iSessionKey);
+	unsigned __int64 Key = iSessionKey;
+	unsigned __int64 iIndex = GET_INDEX(iIndex, Key);
 
 	InterlockedDecrement(&m_iConnectClient);
 	closesocket(pSession->sock);
