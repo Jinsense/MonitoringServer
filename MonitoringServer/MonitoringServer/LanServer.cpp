@@ -656,7 +656,7 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 		if (_pMonitor->_ClientList.empty())
 			return true;
 		CPacket *pNewPacket = CPacket::Alloc();
-		_pMonitor->MakePacket(Type, pNewPacket);
+		_pMonitor->MakePacket(DataType, pNewPacket);
 		pNewPacket->AddRef();
 		list<MONITORINGINFO*>::iterator iter;
 		AcquireSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
