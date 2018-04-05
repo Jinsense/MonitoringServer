@@ -32,7 +32,7 @@ CLanServer::CLanServer()
 		_Monitor[i].Type = i + 1;
 		_Monitor[i].Value = 0;
 		_Monitor[i].TimeStamp = 0;
-		_Monitor[i].Min = 0xffffffff;
+		_Monitor[i].Min = 2147483647;
 		_Monitor[i].Max = 0;
 		_Monitor[i].Avr = 0;
 		_Monitor[i].Recv = false;

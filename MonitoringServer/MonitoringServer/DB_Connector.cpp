@@ -46,11 +46,11 @@ bool CDBConnector::Set(char *szDBIP, char *szUser, char *szPassword, char *szDBN
 bool CDBConnector::Connect()
 {
 	mysql_init(&_MySQL);
-	_pMySQL = mysql_real_connect(&_MySQL, (char*)_szDBIP, (char*)_szDBUser,
-		(char*)_szDBPassword, (char*)_szDBName, 3306, (char*)NULL, 0);
+	_pMySQL = mysql_real_connect(&_MySQL, _szDBIP, _szDBUser,
+		_szDBPassword, _szDBName, 3306, (char*)NULL, 0);
 	if (NULL == _pMySQL)
 	{
-		wprintf(L"DB Connect Error : %s\n", mysql_error(&_MySQL));
+		printf("DB Connect Error : %s\n", mysql_error(&_MySQL));
 		return false;
 	}
 	mysql_set_character_set(_pMySQL, "utf8");
