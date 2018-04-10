@@ -579,13 +579,17 @@ void CLanServer::CompleteRecv(LANSESSION *pSession, DWORD dwTransfered)
 	{
 		CPacket *_pPacket = CPacket::Alloc();
 		if (pSession->RecvQ.GetUseSize() < LAN_HEADER_SIZE + _wPayloadSize)
+		{
+			_pPacket->Free();
 			break;
+		}
 
 		pSession->RecvQ.Dequeue(LAN_HEADER_SIZE);
 
 		if (_pPacket->GetFreeSize() < _wPayloadSize)
 		{
 			shutdown(pSession->sock, SD_BOTH);
+			_pPacket->Free();
 			return;
 		}
 		pSession->RecvQ.Dequeue(_pPacket->GetWritePtr(), _wPayloadSize);
@@ -593,8 +597,10 @@ void CLanServer::CompleteRecv(LANSESSION *pSession, DWORD dwTransfered)
 		_pPacket->PopData(sizeof(CPacket::st_PACKET_HEADER));
 
 		if (false == OnRecv(pSession, _pPacket))
+		{
+			_pPacket->Free();
 			return;
-
+		}
 		_pPacket->Free();
 	}
 	RecvPost(pSession);
@@ -603,12 +609,15 @@ void CLanServer::CompleteRecv(LANSESSION *pSession, DWORD dwTransfered)
 void CLanServer::CompleteSend(LANSESSION *pSession, DWORD dwTransfered)
 {
 	CPacket *_pPacket[LAN_WSABUF_NUMBER];
-	pSession->PacketQ.Peek((char*)&_pPacket, sizeof(CPacket*) *pSession->lSendCount);
+	int Num = pSession->lSendCount;
+
+	pSession->PacketQ.Peek((char*)&_pPacket, sizeof(CPacket*) * Num);
 	for (int i = 0; i < pSession->lSendCount; i++)
 	{
 		_pPacket[i]->Free();
 		pSession->PacketQ.Dequeue(sizeof(CPacket*));
 	}
+	pSession->lSendCount -= Num;
 
 	InterlockedExchange(&pSession->lSendFlag, true);
 
@@ -657,7 +666,6 @@ bool CLanServer::OnRecv(LANSESSION *pSession, CPacket *pPacket)
 			return true;
 		CPacket *pNewPacket = CPacket::Alloc();
 		_pMonitor->MakePacket(DataType, pNewPacket);
-		pNewPacket->AddRef();
 		list<MONITORINGINFO*>::iterator iter;
 		AcquireSRWLockExclusive(&_pMonitor->_ClientList_srwlock);
 		for (iter = _pMonitor->_ClientList.begin(); iter != _pMonitor->_ClientList.end(); iter++)

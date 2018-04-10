@@ -605,7 +605,7 @@ void CNetServer::SendPost(st_Session *pSession)
 		if (_iUseSize > MAX_WSABUF_NUMBER)
 		{
 			_lBufNum = MAX_WSABUF_NUMBER;
-			InterlockedExchangeAdd(&pSession->lSendCount, MAX_WSABUF_NUMBER);
+			pSession->lSendCount += MAX_WSABUF_NUMBER;
 
 			for (int i = 0; i < MAX_WSABUF_NUMBER; i++)
 			{
@@ -613,8 +613,7 @@ void CNetServer::SendPost(st_Session *pSession)
 				_bCheck = pSession->SendQ.Dequeue(_pPacket);
 				if (nullptr == _pPacket)
 				{
-					InterlockedExchangeAdd(&pSession->lSendCount, -(MAX_WSABUF_NUMBER - i));
-
+					g_CrashDump->Crash();
 					return;
 				}
 				pSession->PacketQ.Enqueue((char*)&_pPacket, sizeof(CPacket*));
@@ -625,15 +624,14 @@ void CNetServer::SendPost(st_Session *pSession)
 		else
 		{
 			_lBufNum = _iUseSize;
-			InterlockedExchangeAdd(&pSession->lSendCount, _iUseSize);
+			pSession->lSendCount += _iUseSize;
 			for (int i = 0; i < _iUseSize; i++)
 			{
 				bool _bCheck;
 				_bCheck = pSession->SendQ.Dequeue(_pPacket);
 				if (nullptr == _pPacket)
 				{
-					InterlockedExchangeAdd(&pSession->lSendCount, -(_iUseSize - i));
-					//					InterlockedExchange(&pSession->lSendFlag, false);
+					g_CrashDump->Crash();
 					return;
 				}
 				pSession->PacketQ.Enqueue((char*)&_pPacket, sizeof(CPacket*));
@@ -745,8 +743,8 @@ void CNetServer::CompleteSend(st_Session *pSession, DWORD dwTransfered)
 	{
 		_pPacket[i]->Free();
 		pSession->PacketQ.Dequeue(sizeof(CPacket*));
-		InterlockedDecrement(&pSession->lSendCount);
 	}
+	pSession->lSendCount -= _lSendCount;
 
 	if (true == pSession->lDisConnect && 0 == pSession->SendQ.GetUseCount())
 	{

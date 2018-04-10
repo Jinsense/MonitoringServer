@@ -39,7 +39,6 @@ bool CDBConnector::Set(char *szDBIP, char *szUser, char *szPassword, char *szDBN
 
 	if (false == Connect())
 		return false;
-
 	return true;
 }
 
@@ -51,8 +50,10 @@ bool CDBConnector::Connect()
 	if (NULL == _pMySQL)
 	{
 		printf("DB Connect Error : %s\n", mysql_error(&_MySQL));
+		
 		return false;
 	}
+	printf("[Server :: DataBase]	Connect Complete\n");
 	mysql_set_character_set(_pMySQL, "utf8");
 	return true;
 }
@@ -60,6 +61,7 @@ bool CDBConnector::Connect()
 bool CDBConnector::Disconnect()
 {
 	mysql_close(&_MySQL);
+	printf("DB Disconnect\n");
 	return true;
 }
 
@@ -131,7 +133,7 @@ bool CDBConnector::Query_Save(WCHAR * szStringFormat, ...)
 	//	WCHAR를 CHAR로
 	UTF16toUTF8(_szQuery, _szQueryUTF8, sizeof(_szQuery));
 
-	while (10 > iSpinCount)
+	while (1)
 	{
 		iError = mysql_query(_pMySQL, _szQueryUTF8);
 		if (0 != iError)
@@ -144,7 +146,9 @@ bool CDBConnector::Query_Save(WCHAR * szStringFormat, ...)
 			else
 			{
 				SaveLastError();
-				return false;
+				UTF8toUTF16(_szQueryUTF8, _szLastErrorMsg, sizeof(_szLastErrorMsg));
+				_Log->Log(L"DB", LOG_SYSTEM, L"ErrorCode : %d  Error : %s", _iLastError, _szLastErrorMsg);
+				break;
 			}
 		}
 		else
@@ -152,6 +156,7 @@ bool CDBConnector::Query_Save(WCHAR * szStringFormat, ...)
 			break;
 		}
 	}
+	_pSqlResult = mysql_store_result(&_MySQL);
 	FreeResult();
 	return true;
 }
@@ -178,7 +183,7 @@ void CDBConnector::SaveLastError()
 {
 	//	실패한 에러 코드와 에러번호 저장
 	_iLastError = mysql_errno(&_MySQL);
-	memcpy_s(_szLastErrorMsg, sizeof(_szLastErrorMsg),
+	memcpy_s(_szQueryUTF8, sizeof(_szLastErrorMsg),
 		mysql_error(&_MySQL), sizeof(_szLastErrorMsg));
 	return;
 }

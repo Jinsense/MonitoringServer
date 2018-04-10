@@ -27,6 +27,7 @@ public:
 	~CMonitoringServer();
 
 	bool				MakePacket(BYTE DataType, CPacket *pPacket);
+	void				ThreadInit();
 protected:
 	virtual void		OnClientJoin(st_SessionInfo Info);
 	virtual void		OnClientLeave(unsigned __int64 iClientID);

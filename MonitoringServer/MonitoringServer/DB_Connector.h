@@ -253,7 +253,7 @@ private:
 	char		_szQueryUTF8[eQUERY_MAX_LEN];
 
 	int			_iLastError;
-	WCHAR		_szLastErrorMsg[128];
+	WCHAR		_szLastErrorMsg[512];
 
 	CSystemLog	*_Log;
 };

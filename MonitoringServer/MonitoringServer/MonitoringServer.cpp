@@ -15,8 +15,6 @@ CMonitoringServer::CMonitoringServer()
 	_pLanServer = new CLanServer;
 	_pLanServer->Set(this);
 
-	_DBThread = (HANDLE)_beginthreadex(NULL, 0, &DBWriteThread, (LPVOID)this, 0, NULL);
-	wprintf(L"[Server :: Monitor]	DBWriteThread Create\n");
 //	_Updatethread = (HANDLE)_beginthreadex(NULL, 0, &UpdateThread, (LPVOID)this, 0, NULL);
 //	wprintf(L"[Server :: Monitor]	UpdateThread Create\n");
 }
@@ -208,4 +206,11 @@ bool CMonitoringServer::MakePacket(BYTE DataType, CPacket *pPacket)
 
 	*pPacket << Type << ServerNo << _DataType << DataValue << TimeStamp;
 	return true;
+}
+
+void CMonitoringServer::ThreadInit()
+{
+	_DBThread = (HANDLE)_beginthreadex(NULL, 0, &DBWriteThread, (LPVOID)this, 0, NULL);
+	wprintf(L"[Server :: Monitor]	DBWriteThread Create\n");
+	return;
 }
